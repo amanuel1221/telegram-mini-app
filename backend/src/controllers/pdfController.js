@@ -4,19 +4,10 @@ const {
   uploadPdfToCloudinary,
 } = require("../services/cloudinaryService");
 
-
-
-/**
- * @desc Upload PDF
- * @route POST /api/pdfs/upload
- * @access Teacher only
- */
 exports.uploadPdf = async (req, res) => {
 
   try {
 
-
-    // Check file exists
     if (!req.file) {
 
       return res.status(400).json({
@@ -26,25 +17,15 @@ exports.uploadPdf = async (req, res) => {
 
     }
 
-
-
     const {
       title,
       description,
     } = req.body;
 
-
-
-    // Upload PDF to Cloudinary
     const cloudinaryResult =
       await uploadPdfToCloudinary(
         req.file.buffer
       );
-
-
-
-
-    // Save PDF information
     const pdf = await Pdf.create({
 
       title,
@@ -54,14 +35,11 @@ exports.uploadPdf = async (req, res) => {
       originalName:
         req.file.originalname,
 
-
       publicId:
         cloudinaryResult.public_id,
 
-
       fileUrl:
         cloudinaryResult.secure_url,
-
 
       fileSize:
         cloudinaryResult.bytes,
@@ -71,9 +49,6 @@ exports.uploadPdf = async (req, res) => {
         req.user._id,
 
     });
-
-
-
 
     return res.status(201).json({
 
@@ -88,25 +63,129 @@ exports.uploadPdf = async (req, res) => {
     });
 
 
-
   } catch (error) {
-
 
     console.error(
       "PDF Upload Error:",
       error
     );
 
-
     return res.status(500).json({
 
-      success:false,
+      success: false,
 
-      message:error.message,
+      message: error.message,
 
     });
 
-
   }
+
+};
+
+exports.getAllPdfs = async (req, res) => {
+
+    try {
+
+        const pdfs = await Pdf.find()
+            .select(
+                "title description fileUrl fileSize createdAt"
+            )
+            .sort({
+                createdAt: -1
+            });
+
+
+
+        res.status(200).json({
+
+            success:true,
+
+            count:pdfs.length,
+
+            pdfs
+
+        });
+
+
+    } catch(error){
+
+        console.error(
+            "Get PDFs Error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success:false,
+
+            message:error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+exports.getPdfById = async (req,res)=>{
+
+    try{
+
+
+        const pdf = await Pdf.findById(
+            req.params.id
+        )
+        .select(
+            "title description fileUrl fileSize createdAt"
+        );
+
+
+
+        if(!pdf){
+
+            return res.status(404).json({
+
+                success:false,
+
+                message:"PDF not found"
+
+            });
+
+        }
+
+
+
+        res.status(200).json({
+
+            success:true,
+
+            pdf
+
+        });
+
+
+
+    }catch(error){
+
+
+        console.error(
+            "Get PDF Error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success:false,
+
+            message:error.message
+
+        });
+
+
+    }
 
 };
