@@ -4,7 +4,7 @@ const router = express.Router();
 
 
 const {
-  uploadPdf,
+  uploadPdf,getAllPdfs,getPdfById,
 } = require("../controllers/pdfController");
 
 
@@ -16,13 +16,22 @@ const upload = require("../middlewares/uploadMiddleware");
 
 
 
-// Upload PDF (Teacher only)
 router.post(
   "/upload",
   protect,
   teacherOnly,
   upload.single("file"),
   uploadPdf
+);
+router.get(
+    "/",
+    protect,
+    getAllPdfs
+);
+router.get(
+    "/:id",
+    protect,
+    getPdfById
 );
 
 
