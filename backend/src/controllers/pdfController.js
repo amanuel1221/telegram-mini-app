@@ -1,7 +1,7 @@
 const Pdf = require("../models/Pdf");
 
 const {
-  uploadPdfToCloudinary,
+  uploadPdfToCloudinary,deletePdfFromCloudinary,
 } = require("../services/cloudinaryService");
 
 exports.uploadPdf = async (req, res) => {
@@ -84,108 +84,194 @@ exports.uploadPdf = async (req, res) => {
 
 exports.getAllPdfs = async (req, res) => {
 
-    try {
+  try {
 
-        const pdfs = await Pdf.find()
-            .select(
-                "title description fileUrl fileSize createdAt"
-            )
-            .sort({
-                createdAt: -1
-            });
-
-
-
-        res.status(200).json({
-
-            success:true,
-
-            count:pdfs.length,
-
-            pdfs
-
-        });
+    const pdfs = await Pdf.find()
+      .select(
+        "title description fileUrl fileSize createdAt"
+      )
+      .sort({
+        createdAt: -1
+      });
 
 
-    } catch(error){
 
-        console.error(
-            "Get PDFs Error:",
-            error
-        );
+    res.status(200).json({
+
+      success: true,
+
+      count: pdfs.length,
+
+      pdfs
+
+    });
 
 
-        res.status(500).json({
+  } catch (error) {
 
-            success:false,
+    console.error(
+      "Get PDFs Error:",
+      error
+    );
 
-            message:error.message
 
-        });
+    res.status(500).json({
 
-    }
+      success: false,
+
+      message: error.message
+
+    });
+
+  }
 
 };
 
 
 
+exports.getPdfById = async (req, res) => {
 
-exports.getPdfById = async (req,res)=>{
-
-    try{
-
-
-        const pdf = await Pdf.findById(
-            req.params.id
-        )
-        .select(
-            "title description fileUrl fileSize createdAt"
-        );
+  try {
 
 
-
-        if(!pdf){
-
-            return res.status(404).json({
-
-                success:false,
-
-                message:"PDF not found"
-
-            });
-
-        }
+    const pdf = await Pdf.findById(
+      req.params.id
+    )
+      .select(
+        "title description fileUrl fileSize createdAt"
+      );
 
 
+    if (!pdf) {
 
-        res.status(200).json({
+      return res.status(404).json({
 
-            success:true,
+        success: false,
 
-            pdf
+        message: "PDF not found"
 
-        });
-
-
-
-    }catch(error){
-
-
-        console.error(
-            "Get PDF Error:",
-            error
-        );
-
-
-        res.status(500).json({
-
-            success:false,
-
-            message:error.message
-
-        });
-
-
+      });
     }
 
+    res.status(200).json({
+      success: true,
+      pdf
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Get PDF Error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+
+    });
+  }
+};
+
+exports.getMyPdfs = async (req, res) => {
+  try {
+    const pdfs = await Pdf.find({
+      uploadedBy: req.user._id,
+    })
+      .sort({ createdAt: -1 })
+      .select(
+        "title description originalName fileUrl fileSize createdAt updatedAt"
+      );
+
+    return res.status(200).json({
+      success: true,
+      count: pdfs.length,
+      pdfs,
+    });
+  } catch (error) {
+    console.error("Get My PDFs Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.updatePdf = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    const pdf = await Pdf.findById(req.params.id);
+
+    if (!pdf) {
+      return res.status(404).json({
+        success: false,
+        message: "PDF not found",
+      });
+    }
+
+    if (pdf.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this PDF.",
+      });
+    }
+
+    pdf.title = title ?? pdf.title;
+    pdf.description = description ?? pdf.description;
+
+    await pdf.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "PDF updated successfully",
+      pdf,
+    });
+
+  } catch (error) {
+    console.error("Update PDF Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.deletePdf = async (req, res) => {
+  try {
+    const pdf = await Pdf.findById(req.params.id);
+
+    if (!pdf) {
+      return res.status(404).json({
+        success: false,
+        message: "PDF not found",
+      });
+    }
+
+    if (pdf.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this PDF.",
+      });
+    }
+
+    await deletePdfFromCloudinary(pdf.publicId);
+
+    await pdf.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "PDF deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("Delete PDF Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

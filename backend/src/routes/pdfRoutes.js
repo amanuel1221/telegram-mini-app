@@ -4,7 +4,7 @@ const router = express.Router();
 
 
 const {
-  uploadPdf,getAllPdfs,getPdfById,
+  uploadPdf,getAllPdfs,getPdfById,getMyPdfs,updatePdf,deletePdf,
 } = require("../controllers/pdfController");
 
 
@@ -28,6 +28,22 @@ router.get(
     protect,
     getAllPdfs
 );
+router.get(
+  "/my-files",
+  protect,
+  teacherOnly,
+  getMyPdfs
+);
+
+router.put("/:id", protect, teacherOnly, updatePdf);
+router.delete(
+  "/:id",
+  protect,
+  teacherOnly,
+  deletePdf
+);
+
+
 router.get(
     "/:id",
     protect,

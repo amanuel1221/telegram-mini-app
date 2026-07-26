@@ -6,7 +6,6 @@ const uploadPdfToCloudinary = (fileBuffer) => {
 
     return new Promise((resolve, reject) => {
 
-
         const stream = cloudinary.uploader.upload_stream(
             {
                 folder: "telegram-lms/pdfs",
@@ -21,7 +20,7 @@ const uploadPdfToCloudinary = (fileBuffer) => {
 
                 if (error) {
                     reject(error);
-                } 
+                }
                 else {
                     resolve(result);
                 }
@@ -34,13 +33,16 @@ const uploadPdfToCloudinary = (fileBuffer) => {
             .createReadStream(fileBuffer)
             .pipe(stream);
 
-
     });
 
 };
 
-
+const deletePdfFromCloudinary = async (publicId) => {
+  return await cloudinary.uploader.destroy(publicId, {
+    resource_type: "raw",
+  });
+};
 
 module.exports = {
-    uploadPdfToCloudinary,
+    uploadPdfToCloudinary,deletePdfFromCloudinary,
 };
