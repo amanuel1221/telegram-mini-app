@@ -26,4 +26,10 @@ router.post(
   authController.logout
 );
 
+router.patch(
+  "/check-membership",
+  protect,
+  authController.updateMembership
+);
+
 module.exports = router;

@@ -11,6 +11,7 @@ const {
 const protect = require("../middlewares/authMiddleware");
 
 const teacherOnly = require("../middlewares/teacherMiddleware");
+const memberOnly = require("../middlewares/memberMiddleware");
 
 const upload = require("../middlewares/uploadMiddleware");
 
@@ -26,6 +27,7 @@ router.post(
 router.get(
     "/",
     protect,
+    memberOnly,
     getAllPdfs
 );
 router.get(
@@ -47,6 +49,7 @@ router.delete(
 router.get(
     "/:id",
     protect,
+    memberOnly,
     getPdfById
 );
 
