@@ -2,6 +2,7 @@ import {
 Routes,
 Route,
 Navigate,
+replace,
 } from "react-router-dom";
 
 
@@ -12,6 +13,7 @@ import Home from "./pages/Home";
 import Pdfs from "./pages/Pdfs";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import Login from "./pages/Login";
 
 
 export default function App(){
@@ -19,12 +21,18 @@ export default function App(){
 return (
 
 <Routes>
+<Route
+ path="/login"
+ element={<Login/>}
+/>
 
 
 <Route
 path="/"
 element={
-<Navigate to="/home"/>
+<Navigate to="/home"
+replace/>
+
 }
 />
 
