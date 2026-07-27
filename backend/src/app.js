@@ -5,7 +5,9 @@ require("dotenv").config();
 
 const app = express();
 
-
+const authRoutes = require("./routes/authRoutes");
+const pdfRoutes = require("./routes/pdfRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,18 +23,22 @@ app.use(
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "API Running",
+    message: "Telegram LMS API Running 🚀",
   });
 });
+app.use("/auth", authRoutes);
+app.use(
+  "/pdfs",
+  pdfRoutes
+);
+app.use("/users", userRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.originalUrl}`,
-    hint: "Check your API endpoint.",
   });
 });
-
 
 app.use((err, req, res, next) => {
   console.error(err);
