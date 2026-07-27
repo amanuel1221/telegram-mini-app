@@ -87,12 +87,8 @@ exports.getAllPdfs = async (req, res) => {
   try {
 
     const pdfs = await Pdf.find()
-      .select(
-        "title description fileUrl fileSize createdAt"
-      )
-      .sort({
-        createdAt: -1
-      });
+  .populate("uploadedBy", "firstName lastName username")
+  .sort({ createdAt: -1 });
 
 
 
@@ -130,45 +126,74 @@ exports.getAllPdfs = async (req, res) => {
 
 
 exports.getPdfById = async (req, res) => {
-
   try {
-
-
-    const pdf = await Pdf.findById(
-      req.params.id
-    )
+    const pdf = await Pdf.findById(req.params.id)
       .select(
-        "title description fileUrl fileSize createdAt"
+        "title description fileSize createdAt"
       );
 
-
     if (!pdf) {
-
       return res.status(404).json({
-
         success: false,
-
-        message: "PDF not found"
-
+        message: "PDF not found",
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      pdf
+      pdf,
     });
 
   } catch (error) {
+    console.error("Get PDF Error:", error);
 
-    console.error(
-      "Get PDF Error:",
-      error
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.streamPdf = async (req, res) => {
+  try {
+
+    const pdf = await Pdf.findById(req.params.id);
+
+    if (!pdf) {
+      return res.status(404).json({
+        success: false,
+        message: "PDF not found",
+      });
+    }
+
+    if (!req.user.isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "Join the Telegram group to access this PDF.",
+      });
+    }
+
+    const response = await axios({
+      url: pdf.fileUrl,
+      method: "GET",
+      responseType: "stream",
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${pdf.originalName}"`
     );
 
-    res.status(500).json({
-      success: false,
-      message: error.message
+    response.data.pipe(res);
 
+  } catch (error) {
+    console.error("Stream PDF Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

@@ -4,7 +4,7 @@ const router = express.Router();
 
 
 const {
-  uploadPdf,getAllPdfs,getPdfById,getMyPdfs,updatePdf,deletePdf,
+  uploadPdf,getAllPdfs,getPdfById,streamPdf,getMyPdfs,updatePdf,deletePdf,
 } = require("../controllers/pdfController");
 
 
@@ -51,6 +51,12 @@ router.get(
     protect,
     memberOnly,
     getPdfById
+);
+router.get(
+  "/:id/view",
+  protect,
+  memberOnly,
+  streamPdf
 );
 
 
