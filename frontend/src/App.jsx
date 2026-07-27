@@ -14,6 +14,7 @@ import Pdfs from "./pages/Pdfs";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import PdfReader from "./pages/PdfReader";
 
 
 export default function App(){
@@ -35,7 +36,10 @@ replace/>
 
 }
 />
-
+<Route
+  path="/pdfs/:id"
+  element={<PdfReader />}
+/>
 
 <Route
 element={<AppLayout />}
