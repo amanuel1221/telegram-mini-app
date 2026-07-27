@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 
 import {
   init,
@@ -14,27 +15,27 @@ import AuthProvider from "./context/AuthContext.jsx";
 
 
 try {
+
   init();
 
   console.log(
     "Telegram initialized"
   );
 
-  console.log(
-    "Telegram WebApp:",
-    window.Telegram?.WebApp
-  );
 
   miniApp.ready();
-  miniApp.expand();
+
 
   themeParams.mount();
 
+
 } catch (error) {
+
   console.log(
     "Telegram initialization skipped:",
     error.message
   );
+
 }
 
 
@@ -45,11 +46,15 @@ createRoot(
 
   <StrictMode>
 
-    <AuthProvider>
+    <BrowserRouter>
 
-      <App />
+      <AuthProvider>
 
-    </AuthProvider>
+        <App />
+
+      </AuthProvider>
+
+    </BrowserRouter>
 
   </StrictMode>
 
