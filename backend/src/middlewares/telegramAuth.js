@@ -1,6 +1,8 @@
 const crypto = require("crypto");
 
+
 const verifyTelegramWebAppData = (initData) => {
+
   const params = new URLSearchParams(initData);
 
   const hash = params.get("hash");
@@ -11,62 +13,90 @@ const verifyTelegramWebAppData = (initData) => {
 
   params.delete("hash");
 
+
   const dataCheckString = [...params.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join("\n");
 
+
   const secretKey = crypto
-    .createHmac("sha256", "WebAppData")
+    .createHmac(
+      "sha256",
+      "WebAppData"
+    )
     .update(process.env.BOT_TOKEN)
     .digest();
 
+
   const calculatedHash = crypto
-    .createHmac("sha256", secretKey)
+    .createHmac(
+      "sha256",
+      secretKey
+    )
     .update(dataCheckString)
     .digest("hex");
+
 
   if (calculatedHash !== hash) {
     return null;
   }
 
-  const user = JSON.parse(params.get("user"));
 
-  return user;
+  return JSON.parse(
+    params.get("user")
+  );
+
 };
 
-const telegramAuth = (req, res, next) => {
-  try {
-    const initData = req.headers["x-telegram-init-data"];
 
-    if (!initData) {
+
+const telegramAuth = (req,res,next)=>{
+
+  try {
+
+    const initData =
+      req.body.initDataRaw;
+
+
+    if(!initData){
       return res.status(401).json({
-        success: false,
-        message: "Telegram Init Data missing",
+        success:false,
+        message:"Telegram Init Data missing"
       });
     }
+
 
     const telegramUser =
       verifyTelegramWebAppData(initData);
 
-    if (!telegramUser) {
+
+    if(!telegramUser){
       return res.status(401).json({
-        success: false,
-        message: "Invalid Telegram authentication",
+        success:false,
+        message:"Invalid Telegram authentication"
       });
     }
 
+
     req.telegramUser = telegramUser;
 
+
     next();
-  } catch (error) {
+
+
+  } catch(error){
+
     console.error(error);
 
     return res.status(401).json({
-      success: false,
-      message: "Authentication failed",
+      success:false,
+      message:"Authentication failed"
     });
+
   }
+
 };
+
 
 module.exports = telegramAuth;
