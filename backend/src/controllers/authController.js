@@ -118,3 +118,32 @@ exports.logout = async (req, res) => {
     });
   }
 };
+
+exports.updateMembership = async (req, res) => {
+  try {
+    const isMember = await checkMembership(
+      req.user.telegramId
+    );
+
+    req.user.isMember = isMember;
+
+    await req.user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Membership status updated",
+      isMember: req.user.isMember,
+    });
+
+  } catch (error) {
+    console.error(
+      "Membership Update Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
