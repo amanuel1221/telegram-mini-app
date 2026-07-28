@@ -24,8 +24,7 @@ return (
 <Routes>
 <Route
  path="/login"
- element={<Login/>}
-/>
+ element={<Login/>}/>
 
 
 <Route
@@ -38,8 +37,7 @@ replace/>
 />
 <Route
   path="/pdfs/:id"
-  element={<PdfReader />}
-/>
+  element={<PdfReader />}/>
 
 <Route
 element={<AppLayout />}
