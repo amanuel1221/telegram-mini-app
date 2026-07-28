@@ -10,6 +10,5 @@ export const getPdfById = async (id) => {
   return data;
 };
 
-export const getPdfViewerUrl = (id) => {
-  return `${api.defaults.baseURL}/pdfs/${id}/view`;
-};
+export const getPdfViewerUrl = (id) =>
+  `https://telegram-lms-backend.onrender.com/pdfs/${id}/view`;
