@@ -1,8 +1,8 @@
 import {
-Routes,
-Route,
-Navigate,
-replace,
+  Routes,
+  Route,
+  Navigate,
+  replace,
 } from "react-router-dom";
 
 
@@ -15,64 +15,69 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import PdfReader from "./pages/PdfReader";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 
-export default function App(){
+export default function App() {
 
-return (
+  return (
 
-<Routes>
-<Route
- path="/login"
- element={<Login/>}/>
-
-
-<Route
-path="/"
-element={
-<Navigate to="/home"
-replace/>
-
-}
-/>
-<Route
-  path="/pdfs/:id"
-  element={<PdfReader />}/>
-
-<Route
-element={<AppLayout />}
->
+    <Routes>
+      <Route
+        path="/login"
+        element={<Login />} />
 
 
-<Route
-path="/home"
-element={<Home/>}
-/>
+      <Route
+        path="/"
+        element={
+          <Navigate to="/home"
+            replace />
+
+        }
+      />
+      <Route
+        path="/pdfs/:id"
+        element={<PdfReader />} />
+
+      <Route
+        element={<AppLayout />}
+      >
 
 
-<Route
-path="/pdfs"
-element={<Pdfs/>}
-/>
+        <Route
+          path="/home"
+          element={<Home />}
+        />
 
 
-<Route
-path="/dashboard"
-element={<Dashboard/>}
-/>
+        <Route
+          path="/pdfs"
+          element={<Pdfs />}
+        />
 
 
-<Route
-path="/profile"
-element={<Profile/>}
-/>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
 
-</Route>
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
 
 
-</Routes>
+      </Route>
 
-)
+
+    </Routes>
+
+  )
 
 }
