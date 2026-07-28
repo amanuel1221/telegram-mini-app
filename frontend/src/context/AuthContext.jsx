@@ -63,25 +63,23 @@ export default function AuthProvider({ children }) {
 
   const logout = async () => {
 
-    try {
+  try {
 
-      await logoutApi();
+    await logoutApi();
 
-    } catch(error){
+  } catch(error){
 
-      console.log(
-        "Logout error:",
-        error
-      );
+    console.log(error);
 
-    } finally {
+  } finally {
 
-      setUser(null);
+    setUser(null);
 
-    }
+    window.location.href = "/login";
 
-  };
+  }
 
+};
 
 
   return (
