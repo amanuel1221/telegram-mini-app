@@ -154,14 +154,10 @@ export default function PdfReader() {
       <div className="flex-1 p-3">
 
         <iframe
-
-          src={getPdfViewerUrl(id)}
-
-          title={pdf.title}
-
-          className="h-full w-full rounded-2xl border bg-white shadow"
-
-        />
+  src={`https://telegram-lms-backend.onrender.com/pdfs/${id}/view`}
+  title={pdf.title}
+  className="h-full w-full rounded-2xl border bg-white shadow"
+/>
 
       </div>
 
