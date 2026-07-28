@@ -35,7 +35,17 @@ export default function Login() {
 
         await login(initDataRaw);
 
-        await refreshUser();
+        await Promise.race([
+          refreshUser(),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(
+                new Error("User fetch timeout")
+              ),
+              10000
+            )
+          )
+        ]);
 
         navigate("/dashboard");
       } catch (error) {
