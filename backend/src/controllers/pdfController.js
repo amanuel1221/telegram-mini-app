@@ -2,7 +2,7 @@ const Pdf = require("../models/Pdf");
 const axios = require("axios");
 
 const {
-  uploadPdfToCloudinary,deletePdfFromCloudinary,
+  uploadPdfToCloudinary, deletePdfFromCloudinary,
 } = require("../services/cloudinaryService");
 
 exports.uploadPdf = async (req, res) => {
@@ -88,8 +88,8 @@ exports.getAllPdfs = async (req, res) => {
   try {
 
     const pdfs = await Pdf.find()
-  .populate("uploadedBy", "firstName lastName username")
-  .sort({ createdAt: -1 });
+      .populate("uploadedBy", "firstName lastName username")
+      .sort({ createdAt: -1 });
 
 
 
@@ -180,12 +180,12 @@ exports.streamPdf = async (req, res) => {
       responseType: "stream",
     });
 
-    res.setHeader("Content-Type", "application/pdf");
 
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${pdf.originalName}"`
-    );
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline");
+    res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
 
     response.data.pipe(res);
 
