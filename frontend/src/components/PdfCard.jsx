@@ -24,10 +24,15 @@ export default function PdfCard({ pdf }) {
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            By{" "}
-            {pdf.uploadedBy
-              ? `${pdf.uploadedBy.firstName ?? ""} ${pdf.uploadedBy.lastName ?? ""}`.trim()
-              : "Unknown Teacher"}
+            Uploaded by{" "}
+            <span className="font-medium text-slate-700">
+              {pdf.uploadedBy
+                ? (
+                  `${pdf.uploadedBy.firstName ?? ""} ${pdf.uploadedBy.lastName ?? ""}`.trim()
+                  || `@${pdf.uploadedBy.username}`
+                )
+                : "Unknown Teacher"}
+            </span>
           </p>
 
           <p className="mt-1 text-[11px] text-slate-400">
