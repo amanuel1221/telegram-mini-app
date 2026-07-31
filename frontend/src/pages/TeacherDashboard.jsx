@@ -1,6 +1,7 @@
 import StatsCards from "../components/StatsCards";
 import RecentPdfs from "../components/RecentPdfs";
 import TeacherActions from "../components/TeacherActions";
+import DashboardHeader from "../components/DashboardHeader";
 
 
 export default function TeacherDashboard(){
@@ -22,7 +23,7 @@ font-bold
 Teacher Dashboard
 
 </h1>
-
+<DashboardHeader />
 
 <StatsCards />
 
