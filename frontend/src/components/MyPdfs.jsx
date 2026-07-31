@@ -294,7 +294,7 @@ gap-3
 <button
 
 onClick={()=>navigate(
-`/pdf/${pdf._id}`
+`/pdfs/${pdf._id}`
 )}
 
 className="
@@ -322,28 +322,7 @@ View
 
 
 
-<button
 
-className="
-flex
-items-center
-justify-center
-gap-2
-rounded-xl
-bg-yellow-100
-py-3
-text-sm
-font-semibold
-text-yellow-700
-"
-
->
-
-<Edit size={16}/>
-
-Edit
-
-</button>
 
 
 
