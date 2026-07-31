@@ -19,6 +19,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import TeacherDashboard from "./pages/TeacherDashboard"
 import MyPdfs from "./components/MyPdfs";
 import UploadPdf from "./components/UploadPdf";
+import Students from "./components/Students";
 
 
 export default function App() {
@@ -57,7 +58,7 @@ export default function App() {
           element={<TeacherDashboard />}
         />
 
-       
+
 
 
         <Route
@@ -87,6 +88,10 @@ export default function App() {
         <Route
           path="/teacher/upload"
           element={<UploadPdf />}
+        />
+        <Route
+          path="/teacher/students"
+          element={<Students />}
         />
 
 

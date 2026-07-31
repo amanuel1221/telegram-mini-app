@@ -1,5 +1,11 @@
 import api from "./axios";
 
+export const getAllUsers = async () => {
+  const { data } = await api.get("/users");
+
+  return data;
+};
+
 export const login = async (initDataRaw) => {
   const { data } = await api.post("/auth/login", {
     initDataRaw,
@@ -22,6 +28,14 @@ export const logout = async () => {
 
 export const checkMembership = async () => {
   const { data } = await api.patch("/auth/check-membership");
+
+  return data;
+};
+
+export const promoteUser = async (id) => {
+  const { data } = await api.patch(
+    `/users/${id}/promote`
+  );
 
   return data;
 };

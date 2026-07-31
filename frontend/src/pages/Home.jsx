@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 export default function Home() {
   const featured = [
@@ -70,11 +71,12 @@ export default function Home() {
           <p className="mt-2.5 text-sm leading-relaxed text-blue-100/90">
             Access verified courses, reading slides, and study resources directly inside Telegram.
           </p>
-
-          <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-bold text-indigo-700 shadow-md transition-all hover:bg-blue-50 hover:shadow-lg active:scale-[0.98] sm:w-auto">
+          <NavLink to="/pdfs">
+          <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-bold text-indigo-700 shadow-md transition-all hover:bg-blue-50 hover:shadow-lg active:scale-[0.98] sm:w-auto cursor-pointer">
             Explore PDFs
             <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
           </button>
+          </NavLink>
         </div>
       </section>
 
