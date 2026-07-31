@@ -16,8 +16,9 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import PdfReader from "./pages/PdfReader";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import UploadPdf from "./pages/UploadPdf";
 import TeacherDashboard from "./pages/TeacherDashboard"
+import MyPdfs from "./components/MyPdfs";
+import UploadPdf from "./components/UploadPdf";
 
 
 export default function App() {
@@ -56,10 +57,7 @@ export default function App() {
           element={<TeacherDashboard />}
         />
 
-        <Route
-          path="/teacher/upload"
-          element={<UploadPdf />}
-        />
+       
 
 
         <Route
@@ -81,6 +79,14 @@ export default function App() {
         <Route
           path="/profile"
           element={<Profile />}
+        />
+        <Route
+          path="/teacher/pdfs"
+          element={<MyPdfs />}
+        />
+        <Route
+          path="/teacher/upload"
+          element={<UploadPdf />}
         />
 
 
