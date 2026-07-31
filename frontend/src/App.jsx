@@ -16,6 +16,8 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import PdfReader from "./pages/PdfReader";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import UploadPdf from "./pages/UploadPdf";
+import TeacherDashboard from "./pages/TeacherDashboard"
 
 
 export default function App() {
@@ -48,6 +50,15 @@ export default function App() {
         <Route
           path="/home"
           element={<Home />}
+        />
+        <Route
+          path="/teacher/dashboard"
+          element={<TeacherDashboard />}
+        />
+
+        <Route
+          path="/teacher/upload"
+          element={<UploadPdf />}
         />
 
 

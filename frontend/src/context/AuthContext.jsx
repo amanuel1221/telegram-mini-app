@@ -47,7 +47,14 @@ export default function AuthProvider({ children }) {
 
   useEffect(() => {
 
-    fetchUser();
+    const initAuth = async () => {
+
+      await fetchUser();
+
+    };
+
+
+    initAuth();
 
   }, []);
 
@@ -61,25 +68,38 @@ export default function AuthProvider({ children }) {
 
 
 
+  const setAuthUser = (userData) => {
+
+    setUser(userData);
+
+    setLoading(false);
+
+  };
+
+
+
   const logout = async () => {
 
-  try {
+    try {
 
-    await logoutApi();
+      await logoutApi();
 
-  } catch(error){
+    } catch(error){
 
-    console.log(error);
+      console.log(
+        "Logout error:",
+        error
+      );
 
-  } finally {
+    } finally {
 
-    setUser(null);
+      setUser(null);
 
-    window.location.href = "/login";
+      window.location.href = "/login";
 
-  }
+    }
 
-};
+  };
 
 
   return (
@@ -90,6 +110,7 @@ export default function AuthProvider({ children }) {
         user,
         loading,
         refreshUser,
+        setAuthUser,
         logout,
       }}
 

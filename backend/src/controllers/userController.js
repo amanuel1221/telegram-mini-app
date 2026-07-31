@@ -82,3 +82,21 @@ exports.promoteUser = async (req, res) => {
     });
   }
 };
+
+exports.getUserStats = async (req, res) => {
+  try {
+    const [totalStudents, totalTeachers] = await Promise.all([
+      User.countDocuments({ role: "student" }),
+      User.countDocuments({ role: "teacher" }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalStudents,
+      totalTeachers,
+    });
+  } catch (error) {
+    console.error("Get User Stats Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
