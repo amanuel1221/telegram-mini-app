@@ -8,6 +8,7 @@ const app = express();
 const authRoutes = require("./routes/authRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
 const userRoutes = require("./routes/userRoutes");
+const teacherRoutes = require("./routes/teacherRoutes");
 
 app.set("trust proxy", 1);
 
@@ -47,6 +48,7 @@ app.use(
   pdfRoutes
 );
 app.use("/users", userRoutes);
+app.use("/teacher", teacherRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -26,6 +26,25 @@ export const getMyPdfs = async () => {
   const { data } = await api.get("/pdfs/my-files");
   return data;
 };
+export const deletePdf = async (id) => {
+
+  const { data } = await api.delete(
+    `/pdfs/${id}`
+  );
+
+  return data;
+
+};
+export const updatePdf = async (id, payload) => {
+
+  const { data } = await api.put(
+    `/pdfs/${id}`,
+    payload
+  );
+
+  return data;
+
+};
 
 export const getPdfViewerUrl = (id) =>
   `https://telegram-lms-backend.onrender.com/pdfs/${id}/view`;
