@@ -6,6 +6,7 @@ const {
   getAllUsers,
   getStudents,
   promoteUser,
+  getUserStats,
 } = require("../controllers/userController");
 
 const protect = require("../middlewares/authMiddleware");
@@ -26,6 +27,7 @@ router.get(
   teacherOnly,
   getStudents
 );
+router.get("/stats", protect, teacherOnly, getUserStats);
 
 router.patch(
   "/:id/promote",

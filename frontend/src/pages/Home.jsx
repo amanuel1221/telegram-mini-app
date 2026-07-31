@@ -78,7 +78,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Materials */}
       <section className="mt-8">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-lg font-bold text-slate-900">Featured Materials</h2>
@@ -122,7 +121,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Telegram LMS */}
       <section className="mt-8">
         <h2 className="px-1 text-lg font-bold text-slate-900">
           Why Telegram LMS?
@@ -157,7 +155,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Community Footer Card */}
       <section className="mt-8 mb-6 overflow-hidden rounded-2xl bg-slate-900 p-6 text-white shadow-xl">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-indigo-400">

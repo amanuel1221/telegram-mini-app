@@ -13,54 +13,71 @@ import useAuth from "../hooks/useAuth";
 export default function Login() {
   const navigate = useNavigate();
 
-  const { refreshUser } = useAuth();
-
+  const { setAuthUser } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const telegramLogin = async () => {
-      try {
-        const params = retrieveLaunchParams();
+const telegramLogin = async () => {
+  try {
 
-        console.log("Launch Params:", params);
+    const params = retrieveLaunchParams();
 
-        const initDataRaw = params.initDataRaw;
+    console.log("Launch Params:", params);
 
-        if (!initDataRaw) {
-          throw new Error(
-            "Telegram authentication data not found"
-          );
-        }
+    const initDataRaw = params.initDataRaw;
 
-        await login(initDataRaw);
 
-        await Promise.race([
-          refreshUser(),
-          new Promise((_, reject) =>
-            setTimeout(
-              () => reject(
-                new Error("User fetch timeout")
-              ),
-              10000
-            )
-          )
-        ]);
+    if (!initDataRaw) {
+      throw new Error(
+        "Telegram authentication data not found"
+      );
+    }
 
-        navigate("/dashboard");
-      } catch (error) {
-        console.error(
-          "Telegram Login Error:",
-          error
-        );
 
-        setError(
-          error.message || "Login failed"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+    const response = await login(initDataRaw);
+
+
+    console.log(
+      "Login response:",
+      response
+    );
+
+
+    if (!response.success || !response.user) {
+
+      throw new Error(
+        "Login failed: user data missing"
+      );
+
+    }
+
+
+    setAuthUser(response.user);
+
+
+    navigate("/dashboard");
+
+
+  } catch (error) {
+
+    console.error(
+      "Telegram Login Error:",
+      error
+    );
+
+
+    setError(
+      error.message || "Login failed"
+    );
+
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
     telegramLogin();
   }, []);
