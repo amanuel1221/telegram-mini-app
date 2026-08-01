@@ -2,12 +2,14 @@
 const app=require('./app');
 const connectDB=require('./config/db');
 require('dotenv').config();
+const startMembershipSync = require("./cron/membershipSync");
 
 const PORT=process.env.PORT || 5000;
 
 const startServer=async()=>{
     try{
         await connectDB();
+        startMembershipSync();
         app.listen(PORT,()=>{
             console.log(`Server s running on ${PORT}`);
         });

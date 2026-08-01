@@ -11,11 +11,13 @@ const {
 
 const protect = require("../middlewares/authMiddleware");
 const teacherOnly = require("../middlewares/teacherMiddleware");
+const memberOnly= require("../middlewares/memberMiddleware")
 
 
 router.get(
   "/",
   protect,
+  memberOnly,
   teacherOnly,
   getAllUsers
 );
@@ -24,14 +26,16 @@ router.get(
 router.get(
   "/students",
   protect,
+  memberOnly,
   teacherOnly,
   getStudents
 );
-router.get("/stats", protect, teacherOnly, getUserStats);
+router.get("/stats", protect,memberOnly,teacherOnly, getUserStats);
 
 router.patch(
   "/:id/promote",
   protect,
+  memberOnly,
   teacherOnly,
   promoteUser
 );
