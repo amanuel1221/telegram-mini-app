@@ -4,7 +4,7 @@ const axios = require("axios");
 const {
   uploadPdfToCloudinary, deletePdfFromCloudinary,
 } = require("../services/cloudinaryService");
-
+const { sendPdfAnnouncements } = require("../services/telegramBotService");
 exports.uploadPdf = async (req, res) => {
 
   try {
@@ -51,12 +51,24 @@ exports.uploadPdf = async (req, res) => {
 
     });
 
+    pdf = await pdf.populate(
+      "uploadedBy",
+      "firstName lastName username"
+    );
+
+
+
+  
+
+    await sendPdfAnnouncements(pdf);
+
+
     return res.status(201).json({
 
       success: true,
 
       message:
-        "PDF uploaded successfully",
+        "PDF uploaded and announced successfully",
 
 
       pdf,
