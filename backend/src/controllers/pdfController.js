@@ -51,7 +51,7 @@ exports.uploadPdf = async (req, res) => {
 
     });
 
-    pdf = await pdf.populate(
+   const populatedPdf = await pdf.populate(
       "uploadedBy",
       "firstName lastName username"
     );
@@ -60,7 +60,7 @@ exports.uploadPdf = async (req, res) => {
 
   
 
-    await sendPdfAnnouncements(pdf);
+    await sendPdfAnnouncements(populatedPdf);
 
 
     return res.status(201).json({
