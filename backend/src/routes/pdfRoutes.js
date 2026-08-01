@@ -20,6 +20,7 @@ const upload = require("../middlewares/uploadMiddleware");
 router.post(
   "/upload",
   protect,
+  memberOnly,
   teacherOnly,
   upload.single("file"),
   uploadPdf
@@ -33,6 +34,7 @@ router.get(
 router.get(
   "/my-files",
   protect,
+  memberOnly,
   teacherOnly,
   getMyPdfs
 );
@@ -41,6 +43,7 @@ router.put("/:id", protect, teacherOnly, updatePdf);
 router.delete(
   "/:id",
   protect,
+  memberOnly,
   teacherOnly,
   deletePdf
 );
