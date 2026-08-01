@@ -51,18 +51,20 @@ exports.uploadPdf = async (req, res) => {
 
     });
 
-   const populatedPdf = await pdf.populate(
+    const populatedPdf = await pdf.populate(
       "uploadedBy",
       "firstName lastName username"
     );
 
 
 
-  
+
+    console.log("Uploading complete.");
+    console.log("Sending Telegram announcement...");
 
     await sendPdfAnnouncements(populatedPdf);
 
-
+    console.log("Telegram announcement completed.");
     return res.status(201).json({
 
       success: true,
