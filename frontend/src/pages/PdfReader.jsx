@@ -19,8 +19,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).href;
 
-const PAGE_BUFFER = 2;
-
 export default function PdfReader() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,8 +41,6 @@ export default function PdfReader() {
 
   const storageKey = useMemo(() => `pdf-progress-${id}`, [id]);
   const documentUrl = useMemo(() => getPdfViewerUrl(id), [id]);
-  const pageWindowStart = Math.max(1, currentPage - PAGE_BUFFER);
-  const pageWindowEnd = Math.min(numPages, currentPage + PAGE_BUFFER);
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth);
@@ -289,7 +285,6 @@ export default function PdfReader() {
           >
             {Array.from({ length: numPages }, (_, index) => {
               const pageNumber = index + 1;
-              const shouldRender = pageNumber >= pageWindowStart && pageNumber <= pageWindowEnd;
 
               return (
                 <div
@@ -304,22 +299,16 @@ export default function PdfReader() {
                   data-page={pageNumber}
                   className="w-full rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
                 >
-                  {shouldRender ? (
-                    <div className="flex justify-center rounded-2xl p-2 sm:p-3">
-                      <Page
-                        pageNumber={pageNumber}
-                        scale={fitWidth ? undefined : scale}
-                        width={fitWidth ? Math.max(280, viewportWidth - 28) : undefined}
-                        renderAnnotationLayer={false}
-                        renderTextLayer={false}
-                        className="max-w-full"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex min-h-[320px] items-center justify-center rounded-2xl bg-slate-50 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      Page {pageNumber}
-                    </div>
-                  )}
+                  <div className="flex justify-center rounded-2xl p-2 sm:p-3">
+                    <Page
+                      pageNumber={pageNumber}
+                      scale={fitWidth ? undefined : scale}
+                      width={fitWidth ? Math.max(280, viewportWidth - 28) : undefined}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={false}
+                      className="max-w-full"
+                    />
+                  </div>
                 </div>
               );
             })}
