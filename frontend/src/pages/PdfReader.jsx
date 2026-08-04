@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  FileText,
-  LoaderCircle,
-  Maximize,
-  Minimize,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react";
+import { ArrowLeft, LoaderCircle } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { getPdfById, getPdfViewerUrl } from "../api/pdfApi";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -25,38 +17,33 @@ export default function PdfReader() {
 
   const [pdf, setPdf] = useState(null);
   const [metadataLoading, setMetadataLoading] = useState(true);
-  const [pdfLoading, setPdfLoading] = useState(true);
-  const [pdfProgress, setPdfProgress] = useState(0);
   const [error, setError] = useState("");
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1.1);
-  const [fitWidth, setFitWidth] = useState(() => window.innerWidth < 768);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [scale, setScale] = useState(1.0);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 
-  const viewerRef = useRef(null);
+  const containerRef = useRef(null);
   const pageRefs = useRef(new Map());
-  const restoreTimerRef = useRef(null);
+  const touchDistanceRef = useRef(0);
+  const lastTapRef = useRef(0);
 
   const storageKey = useMemo(() => `pdf-progress-${id}`, [id]);
   const documentUrl = useMemo(() => getPdfViewerUrl(id), [id]);
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth);
-
-    handleResize();
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Prevent right clicks & text copy
   useEffect(() => {
-    const preventContextMenu = (event) => event.preventDefault();
-    const preventCopy = (event) => event.preventDefault();
-    const preventShortcuts = (event) => {
-      if ((event.ctrlKey || event.metaKey) && ["c", "a", "p", "s", "u"].includes(event.key.toLowerCase())) {
-        event.preventDefault();
+    const preventContextMenu = (e) => e.preventDefault();
+    const preventCopy = (e) => e.preventDefault();
+    const preventShortcuts = (e) => {
+      if ((e.ctrlKey || e.metaKey) && ["c", "a", "p", "s", "u"].includes(e.key.toLowerCase())) {
+        e.preventDefault();
       }
     };
 
@@ -71,23 +58,11 @@ export default function PdfReader() {
     };
   }, []);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setFullscreen(Boolean(document.fullscreenElement));
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
+  // Restore & save current scroll page
   useEffect(() => {
     if (!id) return;
-
     const savedPage = Number(localStorage.getItem(storageKey));
-    if (savedPage > 0) {
-      setCurrentPage(savedPage);
-    }
+    if (savedPage > 0) setCurrentPage(savedPage);
   }, [id, storageKey]);
 
   useEffect(() => {
@@ -106,9 +81,7 @@ export default function PdfReader() {
 
         if (visibleEntry) {
           const page = Number(visibleEntry.target.dataset.page);
-          if (page > 0) {
-            setCurrentPage(page);
-          }
+          if (page > 0) setCurrentPage(page);
         }
       },
       { root: null, threshold: [0.2, 0.4, 0.6] }
@@ -120,14 +93,6 @@ export default function PdfReader() {
 
     return () => observer.disconnect();
   }, [numPages]);
-
-  useEffect(() => {
-    return () => {
-      if (restoreTimerRef.current) {
-        clearTimeout(restoreTimerRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const loadPdf = async () => {
@@ -145,210 +110,123 @@ export default function PdfReader() {
     loadPdf();
   }, [id]);
 
-  const toggleFullscreen = async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await viewerRef.current?.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
+  // Touch Gesture Handling for Pinch-to-Zoom
+  const getTouchDistance = (e) => {
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      touchDistanceRef.current = getTouchDistance(e);
+    } else if (e.touches.length === 1) {
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        // Double tap to reset scale
+        setScale(1.0);
       }
-    } catch (fullscreenError) {
-      console.error("Fullscreen error:", fullscreenError);
+      lastTapRef.current = now;
     }
   };
 
-  const handleZoomIn = () => {
-    setScale((previous) => Math.min(2.5, Number((previous + 0.15).toFixed(2))));
-    setFitWidth(false);
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && touchDistanceRef.current > 0) {
+      const currentDistance = getTouchDistance(e);
+      const delta = (currentDistance - touchDistanceRef.current) * 0.005;
+
+      setScale((prevScale) => Math.min(Math.max(0.8, prevScale + delta), 3.0));
+      touchDistanceRef.current = currentDistance;
+    }
   };
 
-  const handleZoomOut = () => {
-    setScale((previous) => Math.max(0.8, Number((previous - 0.15).toFixed(2))));
-    setFitWidth(false);
-  };
-
-  const handleFitWidth = () => {
-    setFitWidth((previous) => !previous);
+  const handleTouchEnd = (e) => {
+    if (e.touches.length < 2) {
+      touchDistanceRef.current = 0;
+    }
   };
 
   if (metadataLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm">
-          <LoaderCircle className="animate-spin text-blue-600" size={34} />
-          <p className="text-sm font-medium text-slate-600">Preparing PDF reader…</p>
-        </div>
+      <div className="flex h-screen w-screen items-center justify-center bg-[#F9F9F6]">
+        <LoaderCircle className="animate-spin text-[#1A73E8]" size={36} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-        <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-red-600">Unable to open this PDF</p>
-          <p className="mt-2 text-sm text-slate-600">{error}</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Go back
-          </button>
-        </div>
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#F9F9F6] px-4 text-center">
+        <p className="text-base font-semibold text-red-600">Unable to open PDF</p>
+        <p className="mt-1 text-xs text-slate-500">{error}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-4 rounded-xl bg-[#1A73E8] px-5 py-2.5 text-xs font-bold text-white shadow-md active:scale-95"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
 
   return (
-    <div ref={viewerRef} className="flex h-screen flex-col bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-3 shadow-sm backdrop-blur sm:px-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="rounded-xl p-2 transition hover:bg-slate-100"
-            aria-label="Go back"
-          >
-            <ArrowLeft size={20} />
-          </button>
+    <div
+      ref={containerRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="relative h-screen w-screen overflow-auto bg-[#1A1A1A] select-none"
+    >
+      {/* Subtle Floating Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white shadow-lg transition active:scale-90"
+        aria-label="Go back"
+      >
+        <ArrowLeft size={20} />
+      </button>
 
-          <div className="rounded-xl bg-blue-50 p-2">
-            <FileText size={20} className="text-blue-600" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-semibold text-slate-900">
-              {pdf?.title || "Untitled PDF"}
-            </h1>
-            <p className="truncate text-xs text-slate-500">
-              Page {currentPage} / {numPages || "—"}
-            </p>
-          </div>
-
-          <button
-            onClick={toggleFullscreen}
-            className="rounded-xl p-2 transition hover:bg-slate-100"
-            aria-label="Toggle fullscreen"
-          >
-            {fullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-          </button>
-        </div>
-
-        <div className="mt-2 flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-blue-600 transition-all duration-200"
-              style={{ width: `${pdfLoading ? Math.max(15, pdfProgress * 100) : 100}%` }}
-            />
-          </div>
-          <span className="text-[11px] font-medium text-slate-500">
-            {pdfLoading ? "Loading…" : "Ready"}
-          </span>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-auto px-2 py-2 sm:px-4 sm:py-3">
-        <div className="mx-auto flex max-w-4xl flex-col items-center gap-3">
-          <Document
-            file={{ url: documentUrl, withCredentials: true }}
-            onLoadSuccess={({ numPages }) => {
-              setNumPages(numPages);
-              setPdfLoading(false);
-              setPdfProgress(1);
-
-              const savedPage = Number(localStorage.getItem(storageKey));
-              if (savedPage > 0 && savedPage <= numPages) {
-                setCurrentPage(savedPage);
-                restoreTimerRef.current = window.setTimeout(() => {
-                  const target = pageRefs.current.get(savedPage);
-                  target?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }, 300);
-              }
-            }}
-            onLoadProgress={({ loaded, total }) => {
-              if (total) {
-                setPdfProgress(loaded / total);
-              }
-            }}
-            onLoadError={(loadError) => {
-              console.error(loadError);
-              setPdfLoading(false);
-              setError("Unable to display PDF contents.");
-            }}
-            loading={
-              <div className="flex min-h-[60vh] items-center justify-center rounded-2xl bg-white px-4 py-10 shadow-sm">
-                <div className="flex flex-col items-center gap-3">
-                  <LoaderCircle className="animate-spin text-blue-600" size={32} />
-                  <p className="text-sm text-slate-500">Streaming PDF securely…</p>
-                </div>
-              </div>
-            }
-          >
-            {Array.from({ length: numPages }, (_, index) => {
-              const pageNumber = index + 1;
-
-              return (
-                <div
-                  key={pageNumber}
-                  ref={(node) => {
-                    if (node) {
-                      pageRefs.current.set(pageNumber, node);
-                    } else {
-                      pageRefs.current.delete(pageNumber);
-                    }
-                  }}
-                  data-page={pageNumber}
-                  className="w-full rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
-                >
-                  <div className="flex justify-center rounded-2xl p-2 sm:p-3">
-                    <Page
-                      pageNumber={pageNumber}
-                      scale={fitWidth ? undefined : scale}
-                      width={fitWidth ? Math.max(280, viewportWidth - 28) : undefined}
-                      renderAnnotationLayer={false}
-                      renderTextLayer={false}
-                      className="max-w-full"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </Document>
-        </div>
+      {/* Floating Minimal Page Badge */}
+      <div className="fixed top-4 right-4 z-50 rounded-full bg-black/40 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+        {currentPage} / {numPages || "—"}
       </div>
 
-      <div className="border-t border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleZoomOut}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition hover:bg-slate-100"
-              aria-label="Zoom out"
-            >
-              <ZoomOut size={18} />
-            </button>
-
-            <button
-              onClick={handleFitWidth}
-              className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                fitWidth ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-slate-50 text-slate-700"
-              }`}
-            >
-              Fit Width
-            </button>
-
-            <button
-              onClick={handleZoomIn}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition hover:bg-slate-100"
-              aria-label="Zoom in"
-            >
-              <ZoomIn size={18} />
-            </button>
-          </div>
-
-          <div className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">
-            {(scale * 100).toFixed(0)}%
-          </div>
-        </div>
+      {/* Full-Screen PDF Render Surface */}
+      <div className="flex min-h-screen w-full items-center justify-center py-2">
+        <Document
+          file={{ url: documentUrl, withCredentials: true }}
+          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+          onLoadError={() => setError("Unable to load document contents.")}
+          loading={
+            <div className="flex h-screen items-center justify-center">
+              <LoaderCircle className="animate-spin text-white/70" size={32} />
+            </div>
+          }
+        >
+          {Array.from({ length: numPages }, (_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <div
+                key={pageNumber}
+                ref={(node) => {
+                  if (node) pageRefs.current.set(pageNumber, node);
+                  else pageRefs.current.delete(pageNumber);
+                }}
+                data-page={pageNumber}
+                className="my-1 flex justify-center shadow-2xl"
+              >
+                <Page
+                  pageNumber={pageNumber}
+                  scale={scale}
+                  width={viewportWidth}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  className="max-w-none transition-transform duration-75"
+                />
+              </div>
+            );
+          })}
+        </Document>
       </div>
     </div>
   );
