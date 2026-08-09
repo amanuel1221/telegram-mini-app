@@ -11,8 +11,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).href;
 
-const PAGE_BUFFER = 2;
-
 export default function PdfReader() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,21 +29,21 @@ export default function PdfReader() {
   const storageKey = useMemo(() => `pdf-progress-${id}`, [id]);
   const documentUrl = useMemo(() => getPdfViewerUrl(id), [id]);
 
-  const pageWindowStart = Math.max(1, currentPage - PAGE_BUFFER);
-  const pageWindowEnd = Math.min(numPages, currentPage + PAGE_BUFFER);
-
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Prevent right clicks, copy & keyboard inspection shortcuts
+  // Prevent right clicks, copy & keyboard shortcuts
   useEffect(() => {
     const preventContextMenu = (event) => event.preventDefault();
     const preventCopy = (event) => event.preventDefault();
     const preventShortcuts = (event) => {
-      if ((event.ctrlKey || event.metaKey) && ["c", "a", "p", "s", "u"].includes(event.key.toLowerCase())) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        ["c", "a", "p", "s", "u"].includes(event.key.toLowerCase())
+      ) {
         event.preventDefault();
       }
     };
@@ -95,7 +93,7 @@ export default function PdfReader() {
     });
 
     return () => observer.disconnect();
-  }, [numPages, pageWindowStart, pageWindowEnd]);
+  }, [numPages]);
 
   useEffect(() => {
     setNumPages(0);
@@ -110,7 +108,10 @@ export default function PdfReader() {
         await getPdfById(id);
       } catch (loadError) {
         console.error(loadError);
-        const message = loadError.response?.data?.message || loadError.message || "Unable to load PDF metadata.";
+        const message =
+          loadError.response?.data?.message ||
+          loadError.message ||
+          "Unable to load PDF metadata.";
         setError(message);
       } finally {
         setMetadataLoading(false);
@@ -120,11 +121,14 @@ export default function PdfReader() {
     loadPdf();
   }, [id]);
 
-  // Touch handlers for 2-finger pinch zoom & double-tap zoom reset
+  // Touch handlers for fluid hardware-accelerated pinch zoom
   const getTouchDistance = (e) => {
     const touch1 = e.touches[0];
     const touch2 = e.touches[1];
-    return Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+    return Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
   };
 
   const handleTouchStart = (e) => {
@@ -133,7 +137,7 @@ export default function PdfReader() {
     } else if (e.touches.length === 1) {
       const now = Date.now();
       if (now - lastTapRef.current < 300) {
-        // Reset zoom on double tap
+        // Double tap reset zoom
         setScale(1.0);
       }
       lastTapRef.current = now;
@@ -143,9 +147,9 @@ export default function PdfReader() {
   const handleTouchMove = (e) => {
     if (e.touches.length === 2 && touchDistanceRef.current > 0) {
       const currentDistance = getTouchDistance(e);
-      const delta = (currentDistance - touchDistanceRef.current) * 0.005;
+      const delta = (currentDistance - touchDistanceRef.current) * 0.006;
 
-      setScale((prev) => Math.min(Math.max(0.7, prev + delta), 3.0));
+      setScale((prev) => Math.min(Math.max(0.8, prev + delta), 3.5));
       touchDistanceRef.current = currentDistance;
     }
   };
@@ -189,67 +193,65 @@ export default function PdfReader() {
       {/* Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 backdrop-blur-md text-white shadow-lg transition active:scale-90 cursor-pointer"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white shadow-lg transition active:scale-90 cursor-pointer"
         aria-label="Go back"
       >
         <ArrowLeft size={20} />
       </button>
 
       {/* Floating Page Counter */}
-      <div className="fixed top-4 right-4 z-50 rounded-full bg-black/50 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white shadow-lg">
+      <div className="fixed top-4 right-4 z-50 rounded-full bg-black/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white shadow-lg">
         {currentPage} / {numPages || "—"}
       </div>
 
-      {/* Full Screen PDF Reader Container */}
-      <div className="flex min-h-screen w-full flex-col items-center py-2">
-        <Document
-          file={{ url: documentUrl, withCredentials: true }}
-          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          onLoadError={(loadError) => {
-            console.error(loadError);
-            setError(loadError?.message || "You don't have access to this PDF.");
+      {/* Full Screen Native Render Container */}
+      <div className="flex min-h-screen w-full flex-col items-center py-2 overflow-hidden">
+        <div
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "top center",
+            transition: touchDistanceRef.current ? "none" : "transform 0.15s ease-out",
           }}
-          loading={
-            <div className="flex h-screen items-center justify-center">
-              <LoaderCircle className="animate-spin text-white/80" size={34} />
-            </div>
-          }
+          className="w-full flex flex-col items-center"
         >
-          {Array.from({ length: numPages }, (_, index) => {
-            const pageNumber = index + 1;
-            const shouldRender = pageNumber >= pageWindowStart && pageNumber <= pageWindowEnd;
+          <Document
+            file={{ url: documentUrl, withCredentials: true }}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+            onLoadError={(loadError) => {
+              console.error(loadError);
+              setError(loadError?.message || "You don't have access to this PDF.");
+            }}
+            loading={
+              <div className="flex h-screen items-center justify-center">
+                <LoaderCircle className="animate-spin text-white/80" size={34} />
+              </div>
+            }
+          >
+            {Array.from({ length: numPages }, (_, index) => {
+              const pageNumber = index + 1;
 
-            return (
-              <div
-                key={pageNumber}
-                ref={(node) => {
-                  if (node) pageRefs.current.set(pageNumber, node);
-                  else pageRefs.current.delete(pageNumber);
-                }}
-                data-page={pageNumber}
-                className="my-1.5 flex justify-center shadow-2xl"
-              >
-                {shouldRender ? (
+              return (
+                <div
+                  key={pageNumber}
+                  ref={(node) => {
+                    if (node) pageRefs.current.set(pageNumber, node);
+                    else pageRefs.current.delete(pageNumber);
+                  }}
+                  data-page={pageNumber}
+                  className="my-1.5 flex justify-center shadow-2xl"
+                >
                   <Page
                     pageNumber={pageNumber}
-                    scale={scale}
                     width={viewportWidth}
                     renderAnnotationLayer={false}
                     renderTextLayer={false}
-                    className="max-w-none transition-transform duration-75"
+                    className="max-w-none"
                   />
-                ) : (
-                  <div
-                    style={{ width: viewportWidth * scale, height: viewportWidth * scale * 1.3 }}
-                    className="flex items-center justify-center bg-slate-900 text-xs font-bold text-slate-500 uppercase tracking-widest"
-                  >
-                    Page {pageNumber}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </Document>
+                </div>
+              );
+            })}
+          </Document>
+        </div>
       </div>
     </div>
   );
