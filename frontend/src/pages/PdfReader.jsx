@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle, ZoomIn, ZoomOut } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { getPdfById, getPdfViewerUrl } from "../api/pdfApi";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -23,8 +23,6 @@ export default function PdfReader() {
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 
   const pageRefs = useRef(new Map());
-  const touchDistanceRef = useRef(0);
-  const lastTapRef = useRef(0);
 
   const storageKey = useMemo(() => `pdf-progress-${id}`, [id]);
   const documentUrl = useMemo(() => getPdfViewerUrl(id), [id]);
@@ -121,43 +119,13 @@ export default function PdfReader() {
     loadPdf();
   }, [id]);
 
-  // Touch handlers for fluid hardware-accelerated pinch zoom
-  const getTouchDistance = (e) => {
-    const touch1 = e.touches[0];
-    const touch2 = e.touches[1];
-    return Math.hypot(
-      touch2.clientX - touch1.clientX,
-      touch2.clientY - touch1.clientY
-    );
+  // Handle explicit button zoom controls
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.2, 3.0));
   };
 
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      touchDistanceRef.current = getTouchDistance(e);
-    } else if (e.touches.length === 1) {
-      const now = Date.now();
-      if (now - lastTapRef.current < 300) {
-        // Double tap reset zoom
-        setScale(1.0);
-      }
-      lastTapRef.current = now;
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && touchDistanceRef.current > 0) {
-      const currentDistance = getTouchDistance(e);
-      const delta = (currentDistance - touchDistanceRef.current) * 0.006;
-
-      setScale((prev) => Math.min(Math.max(0.8, prev + delta), 3.5));
-      touchDistanceRef.current = currentDistance;
-    }
-  };
-
-  const handleTouchEnd = (e) => {
-    if (e.touches.length < 2) {
-      touchDistanceRef.current = 0;
-    }
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.2, 0.6));
   };
 
   if (metadataLoading) {
@@ -184,33 +152,46 @@ export default function PdfReader() {
   }
 
   return (
-    <div
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      className="relative h-screen w-screen overflow-auto bg-[#121212] select-none touch-pan-y"
-    >
+    <div className="relative h-screen w-screen overflow-auto bg-[#121212] select-none">
       {/* Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white shadow-lg transition active:scale-90 cursor-pointer"
+        className="fixed top-4 left-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white shadow-lg transition active:scale-90 cursor-pointer"
         aria-label="Go back"
       >
-        <ArrowLeft size={20} />
+        <ArrowLeft size={18} />
       </button>
 
-      {/* Floating Page Counter */}
-      <div className="fixed top-4 right-4 z-50 rounded-full bg-black/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white shadow-lg">
-        {currentPage} / {numPages || "—"}
+      {/* Floating Controls: Zoom Out, Page Counter, Zoom In */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md p-1 pl-1.5 pr-2.5 text-xs font-semibold text-white shadow-lg">
+        <button
+          onClick={handleZoomOut}
+          className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/20 active:scale-90 cursor-pointer"
+          aria-label="Zoom Out"
+        >
+          <ZoomOut size={15} />
+        </button>
+
+        <span className="px-1 text-xs">
+          {currentPage} / {numPages || "—"}
+        </span>
+
+        <button
+          onClick={handleZoomIn}
+          className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/20 active:scale-90 cursor-pointer"
+          aria-label="Zoom In"
+        >
+          <ZoomIn size={15} />
+        </button>
       </div>
 
-      {/* Full Screen Native Render Container */}
+      {/* Full Screen PDF Render Container */}
       <div className="flex min-h-screen w-full flex-col items-center py-2 overflow-hidden">
         <div
           style={{
             transform: `scale(${scale})`,
             transformOrigin: "top center",
-            transition: touchDistanceRef.current ? "none" : "transform 0.15s ease-out",
+            transition: "transform 0.2s ease-out",
           }}
           className="w-full flex flex-col items-center"
         >
